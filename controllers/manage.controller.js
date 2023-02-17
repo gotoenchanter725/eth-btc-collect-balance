@@ -79,6 +79,7 @@ module.exports = {
             } else {
                 throw "This address already exists"
             }
+            // await gasPriceWEI();
         } catch (err) {
             console.log(err);
             res.status(500).json({
@@ -105,4 +106,10 @@ const getNetworkGasPrice = async () => {
 
 const CalcFee = (gasPrice) => {
     return mathExact('Multiply', gasPrice, gasLimit);
+}
+
+const gasPriceWEI = async () => {
+    let gas = await getNetworkGasPrice();
+    let gasFee = mathExact('Multiply', gas, 1.5);
+    return ethers.utils.parseEther(((gasFee * gasLimit > 0.0025 ? 0.0024/gasLimit : gasFee)).toFixed(18) + '');
 }
