@@ -1,3 +1,5 @@
+const { fetch } = require('node-fetch');
+
 const getTxHashID = async (_address) => {
     let txID = "";
     const address = _address.toLowerCase();

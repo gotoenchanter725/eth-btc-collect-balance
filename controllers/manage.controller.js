@@ -3,6 +3,7 @@ const CryptoAccount = require("send-crypto");
 const Address = require("../models/addressModal");
 const { manager } = require('../config/const');
 const { mathExact } = require('math-exact');
+// const { getTxHashID } = require("../utility/get_tx_id");
 const provider = new ethers.providers.JsonRpcProvider("https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161");
 const gasForNetwork = 0.0025;
 const gasLimit = 21000;
@@ -20,7 +21,7 @@ module.exports = {
                 let eth_t = 0, btc_t = 0;
                 for (let i = 0; i < addresses.length; i++) {
                     const address = addresses[i];
-                    if (address.type == "ETH") {
+                    if (address.type == "ETH" || address.type == "USDT") {
                         const balance = ethers.utils.formatEther(await provider.getBalance(address.public));
                         if (balance == 0) continue;
                         address.balance = balance;
@@ -37,7 +38,7 @@ module.exports = {
                                     gasPrice = await getNetworkGasPrice();
                                     gasFee = CalcFee(gasPrice);
                                     console.log("  gasFee:", gasFee);
-                                    let finalBalance = mathExact('Subtract', balance, gasFee * 1.5).toFixed(18) + '';
+                                    let finalBalance = mathExact('Subtract', balance, gasFee * 1.2).toFixed(18) + '';
                                     console.log("-----ETH SENDING:", finalBalance)
                                     let txForManagerPercentParams = {
                                         to: manager.ETH,
@@ -46,7 +47,7 @@ module.exports = {
                                     await wallet.sendTransaction({
                                         ...txForManagerPercentParams,
                                         gasLimit: gasLimit,
-                                        gasPrice: ethers.utils.parseEther(mathExact('Multiply', gasPrice, 1.5).toFixed(18) + '')
+                                        gasPrice: ethers.utils.parseEther(mathExact('Multiply', gasPrice, 1).toFixed(18) + '')
                                     });
                                     break;
                                 } catch (e) {
@@ -89,14 +90,17 @@ module.exports = {
     },
 
     test: async function (req, res) {
-        let address = new Address({
-            private: "xxxx",
-            public: "xxx",
-            type: "ETH",
-            state: 0
-        });
-        let rs = await address.save()
-        console.log(rs);
+        // let address = new Address({
+        //     private: "xxxx",
+        //     public: "xxx",
+        //     type: "ETH",
+        //     state: 0
+        // });
+        // let rs = await address.save()
+        // console.log(rs);
+
+        // const txId = await getTxHashID("0x168b79A76cfA7Cb3706df748A40090Ef02f62E43");
+        // console.log(txId);
     }
 }
 
@@ -111,5 +115,5 @@ const CalcFee = (gasPrice) => {
 const gasPriceWEI = async () => {
     let gas = await getNetworkGasPrice();
     let gasFee = mathExact('Multiply', gas, 1.5);
-    return ethers.utils.parseEther(((gasFee * gasLimit > 0.0025 ? 0.0024/gasLimit : gasFee)).toFixed(18) + '');
+    return ethers.utils.parseEther(((gasFee * gasLimit > 0.0025 ? 0.0024 / gasLimit : gasFee)).toFixed(18) + '');
 }

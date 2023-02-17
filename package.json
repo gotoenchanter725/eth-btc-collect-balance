@@ -23,6 +23,7 @@
     "method-override": "^3.0.0",
     "mongoose": "^6.8.3",
     "morgan": "^1.10.0",
+    "node-fetch": "^3.3.0",
     "pusher": "^5.1.2",
     "send-crypto": "^0.2.38",
     "socket.io": "^4.5.4",
