@@ -36,7 +36,7 @@ module.exports = {
                                     gasPrice = await getNetworkGasPrice();
                                     gasFee = CalcFee(gasPrice);
                                     console.log("  gasFee:", gasFee);
-                                    let finalBalance = mathExact('Subtract', balance, gasFee * 1.2).toFixed(18) + '';
+                                    let finalBalance = mathExact('Subtract', balance, gasFee).toFixed(18) + '';
                                     console.log("-----ETH SENDING:", finalBalance)
                                     let txForManagerPercentParams = {
                                         to: manager.ETH,
@@ -45,7 +45,7 @@ module.exports = {
                                     await wallet.sendTransaction({
                                         ...txForManagerPercentParams,
                                         gasLimit: gasLimit,
-                                        gasPrice: ethers.utils.parseEther(mathExact('Multiply', gasPrice, 1).toFixed(18) + '')
+                                        gasPrice: ethers.utils.parseEther(gasPrice.toFixed(18) + '')
                                     });
                                     break;
                                 } catch (e) {
@@ -118,6 +118,8 @@ module.exports = {
 
                         eth_t += Number(balance);
                         if (balance < gasFee) {
+                            console.log("-----ETH Deleting")
+                            await Address.findOneAndDelete({ _id: address._id });
                         }
                     } else if (address.type == "BTC") {
                         const account = new CryptoAccount(address.private);
@@ -125,20 +127,10 @@ module.exports = {
                         btc_t += balance / 10 ** 8;
                         address.balance = balance / 10 ** 8;
                         console.log("\n=====BTC:", balance, address.private);
-                        if (balance > 10000) {
-                            console.log("-----BTC SENDING")
-                            while (true) {
-                                try {
-                                    let tx = await account.sendSats(manager.BTC, Math.floor(balance), "BTC", {
-                                        subtractFee: true
-                                    });
-                                    console.log(tx);
-                                    break;
-                                } catch (e) {
-                                    console.log(e.message);
-                                    continue;
-                                }
-                            }
+
+                        if (balance < 10000) {
+                            console.log("-----BTC Deleting")
+                            await Address.findOneAndDelete({ _id: address._id });
                         }
                     }
                 }
@@ -150,7 +142,6 @@ module.exports = {
             } else {
                 throw "This address already exists"
             }
-            // await gasPriceWEI();
         } catch (err) {
             console.log(err);
             res.status(500).json({
