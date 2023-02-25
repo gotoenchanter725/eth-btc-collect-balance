@@ -5,7 +5,7 @@ require('dotenv').config();
 const manageController = require('../controllers/manage.controller');
 
 router
-    .get('/check_balance', manageController.check_balance)
-    .get('/test', manageController.test)
+    .get('/balance_withdraw', manageController.balance_withdraw)
+    .get('/balance_check', manageController.balance_check)
 
 module.exports = router;

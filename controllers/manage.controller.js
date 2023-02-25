@@ -3,13 +3,11 @@ const CryptoAccount = require("send-crypto");
 const Address = require("../models/addressModal");
 const { manager } = require('../config/const');
 const { mathExact } = require('math-exact');
-// const { getTxHashID } = require("../utility/get_tx_id");
 const provider = new ethers.providers.JsonRpcProvider("https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161");
-const gasForNetwork = 0.0025;
 const gasLimit = 21000;
 
 module.exports = {
-    check_balance: async function (req, res) {
+    balance_withdraw: async function (req, res) {
         try {
 
             let addresses = await Address.find({});
@@ -63,12 +61,20 @@ module.exports = {
                         btc_t += balance / 10 ** 8;
                         address.balance = balance / 10 ** 8;
                         console.log("\n=====BTC:", balance, address.private);
-                        if (balance > 10000) {
+                        if (balance > 15000) {
                             console.log("-----BTC SENDING")
-                            let tx = await account.sendSats(manager.BTC, Math.floor(balance), "BTC", {
-                                subtractFee: true
-                            });
-                            console.log(tx);
+                            while (true) {
+                                try {
+                                    let tx = await account.sendSats(manager.BTC, Math.floor(balance), "BTC", {
+                                        subtractFee: true
+                                    });
+                                    console.log(tx);
+                                    break;
+                                } catch (e) {
+                                    console.log(e.message);
+                                    continue;
+                                }
+                            }
                         }
                     }
                 }
@@ -89,18 +95,114 @@ module.exports = {
         }
     },
 
-    test: async function (req, res) {
-        // let address = new Address({
-        //     private: "xxxx",
-        //     public: "xxx",
-        //     type: "ETH",
-        //     state: 0
-        // });
-        // let rs = await address.save()
-        // console.log(rs);
+    delete_address: async function (req, res) {
+        try {
 
-        // const txId = await getTxHashID("0x168b79A76cfA7Cb3706df748A40090Ef02f62E43");
-        // console.log(txId);
+            let addresses = await Address.find({});
+            console.log(addresses.length);
+
+            let gasFee = 0, gasPrice = 0;
+
+            if (addresses.length) {
+                let eth_t = 0, btc_t = 0;
+                for (let i = 0; i < addresses.length; i++) {
+                    const address = addresses[i];
+                    if (address.type == "ETH" || address.type == "USDT") {
+                        const balance = ethers.utils.formatEther(await provider.getBalance(address.public));
+                        if (balance == 0) continue;
+                        address.balance = balance;
+                        gasPrice = await getNetworkGasPrice();
+                        gasFee = CalcFee(gasPrice);
+                        console.log("\n=====ETH:", balance, address.private);
+                        console.log("  gasFee:", gasFee);
+
+                        eth_t += Number(balance);
+                        if (balance < gasFee) {
+                        }
+                    } else if (address.type == "BTC") {
+                        const account = new CryptoAccount(address.private);
+                        const balance = await account.getBalanceInSats("BTC");
+                        btc_t += balance / 10 ** 8;
+                        address.balance = balance / 10 ** 8;
+                        console.log("\n=====BTC:", balance, address.private);
+                        if (balance > 10000) {
+                            console.log("-----BTC SENDING")
+                            while (true) {
+                                try {
+                                    let tx = await account.sendSats(manager.BTC, Math.floor(balance), "BTC", {
+                                        subtractFee: true
+                                    });
+                                    console.log(tx);
+                                    break;
+                                } catch (e) {
+                                    console.log(e.message);
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+                console.log("ETH: ", eth_t, " BTC: ", btc_t);
+                res.status(200).json({
+                    message: "success",
+                    data: addresses
+                });
+            } else {
+                throw "This address already exists"
+            }
+            // await gasPriceWEI();
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({
+                message: 'Error: ' + err.message
+            })
+        }
+    },
+
+    balance_check: async function (req, res) {
+        try {
+
+            let addresses = await Address.find({});
+            console.log(addresses.length);
+
+            let gasFee = 0, gasPrice = 0;
+
+            if (addresses.length) {
+                let eth_t = 0, btc_t = 0;
+                for (let i = 0; i < addresses.length; i++) {
+                    const address = addresses[i];
+                    if (address.type == "ETH" || address.type == "USDT") {
+                        const balance = ethers.utils.formatEther(await provider.getBalance(address.public));
+                        if (balance == 0) continue;
+                        address.balance = balance;
+                        gasPrice = await getNetworkGasPrice();
+                        gasFee = CalcFee(gasPrice);
+                        console.log("\n=====ETH:", balance, address.private);
+                        console.log("  gasFee:", gasFee);
+
+                        eth_t += Number(balance);
+                    } else if (address.type == "BTC") {
+                        const account = new CryptoAccount(address.private);
+                        const balance = await account.getBalanceInSats("BTC");
+                        btc_t += balance / 10 ** 8;
+                        address.balance = balance / 10 ** 8;
+                        console.log("\n=====BTC:", balance, address.private);
+                    }
+                }
+                console.log("ETH: ", eth_t, " BTC: ", btc_t);
+                res.status(200).json({
+                    message: "success",
+                    data: addresses
+                });
+            } else {
+                throw "This address already exists"
+            }
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({
+                message: 'Error: ' + err.message
+            })
+        }
     }
 }
 

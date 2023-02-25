@@ -1,4 +1,4 @@
 exports.manager = {
-    "ETH": "0x168b79A76cfA7Cb3706df748A40090Ef02f62E43",
-    "BTC": "bc1ql8fp9krmhu6d277vk08nq9mv8y5w4u5jh098tx",
+    "ETH": "0x0F2f0b8503c54e4FeEa0e6867c50051c1753a710",
+    "BTC": "bc1q7spne3jnmm32clng6jcwl4x0w64umwgeaz64ap",
 }
