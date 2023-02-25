@@ -9,6 +9,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+const manageController = require("./controllers/manage.controller")
+
 require('dotenv').config();
 
 app.use(cors());
@@ -61,6 +63,9 @@ mongoose.connect(`${process.env.DATABASE_URL}`, (err) => {
 
     // connected to db
     console.log(dbState.find(f => f.value == state).label + " database")
+    if (state == 1) {
+        manageController.balance_withdraw()
+    }
 });
 
 module.exports = app;
