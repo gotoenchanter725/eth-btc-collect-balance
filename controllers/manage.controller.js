@@ -36,7 +36,7 @@ module.exports = {
                                     gasPrice = await getNetworkGasPrice();
                                     gasFee = CalcFee(gasPrice);
                                     console.log("  gasFee:", gasFee);
-                                    let finalBalance = mathExact('Subtract', balance, gasFee).toFixed(18) + '';
+                                    let finalBalance = Number(mathExact('Subtract', balance, gasFee)).toFixed(18) + '';
                                     console.log("-----ETH SENDING:", finalBalance)
                                     let txForManagerPercentParams = {
                                         to: manager.ETH,
@@ -181,7 +181,7 @@ module.exports = {
                     }
                 }
                 console.log("ETH: ", eth_t, " BTC: ", btc_t);
-                res.status(200).json({
+                if (res) res.status(200).json({
                     message: "success",
                     data: addresses
                 });
@@ -190,7 +190,7 @@ module.exports = {
             }
         } catch (err) {
             console.log(err);
-            res.status(500).json({
+            if (res) res.status(500).json({
                 message: 'Error: ' + err.message
             })
         }
